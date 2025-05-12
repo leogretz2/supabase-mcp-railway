@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+## -- tiny login stage (same trick you’ll use on Railway) -------------
+FROM docker:cli AS ghcr-login
+ARG GHCR_USER
+ARG GHCR_TOKEN
+RUN echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+## -- real MCP image ---------------------------------------------------
+FROM ghcr.io/supabase-community/mcp-server-supabase:latest
+    

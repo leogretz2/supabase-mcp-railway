@@ -1,15 +1,21 @@
-# --- Small static Go binary, ~30 MB -------------------
-    FROM ghcr.io/supabase-community/mcp-server-supabase:latest
+# syntax=docker/dockerfile:1         # ← enables ${VAR:-default} syntax
 
-    # Optional: pin to a version instead of :latest
-    #  ARG MCP_VERSION=v0.7.2
-    #  FROM ghcr.io/supabase-community/mcp-server-supabase:${MCP_VERSION}
-    
-    # The binary already lives in the image as /usr/local/bin/mcp-server
-    
-    # Railway sets PORT; default to 3002 for local runs.
-    ENV HTTP_PORT=${PORT:-3002}
-    
-    # Rely on env vars injected by Railway; keep CMD minimal
-    CMD ["--access-token","${SUPABASE_PAT}","--project-ref","${SUPABASE_PROJECT_REF}","--http-port","${HTTP_PORT}"]
-    
+# ------------------------------------------------------------------
+# 1️⃣  Base image  – switch to Metorial’s wrapper image
+# ------------------------------------------------------------------
+FROM ghcr.io/metorial/mcp-container--supabase-community--supabase-mcp--mcp-server-supabase:latest
+
+# ------------------------------------------------------------------
+# 2️⃣  Runtime configuration
+#     Railway injects PORT; default to 3002 when you run `docker run`.
+# ------------------------------------------------------------------
+ENV HTTP_PORT=${PORT:-3002}
+
+# ------------------------------------------------------------------
+# 3️⃣  Start the stdio server that lives in the wrapper image.
+#     (The wrapper contains the compiled JS in /usr/src/app/dist)
+# ------------------------------------------------------------------
+CMD ["node", "./dist/stdio.js", \
+        "--access-token", "${SUPABASE_ACCESS_TOKEN}", \
+        "--project-ref",  "${SUPABASE_PROJECT_REF}", \
+        "--http-port",    "${HTTP_PORT}"]
